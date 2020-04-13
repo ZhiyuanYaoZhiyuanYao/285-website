@@ -6,6 +6,9 @@ def index():
     if request.method == 'GET':
         # show html form
         return '''
+            <h2>
+            Warning: If any input is illegal, the output is not guaranteed. 
+            </h2>
             <form method="post">
                 </br></br> Stock Symbol </br> <input type="text" name="stockSymbol" /> 
                 </br></br>Allotment </br><input type="text" name="allotment" />
@@ -29,9 +32,20 @@ def index():
 
         proceeds = allotment * finalPrcie
 
+        if len(stockSymbol) < 1:
+            return "Stock Symbol needed!"
+
+        if allotment <= 0:
+            return "Allotment should be more than 0!"
+        
+        if finalPrcie <= 0 or initialPrice <= 0:
+            return "Final or initial price shoule be more than 0!"
+        
+        if taxRate < 0:
+            return "Tax rate should not be negative!"
+
         if finalPrcie > initialPrice:
             cost = allotment * initialPrice + buyCommission + sellCommission + taxRate * (allotment * (finalPrcie - initialPrice) - buyCommission - sellCommission)
-            
         else:
             cost = allotment * initialPrice + buyCommission + sellCommission
             
@@ -43,7 +57,6 @@ def index():
             returnOnInvestment = "n/a"
 
         breakEvenPrice = initialPrice + (buyCommission + sellCommission) / allotment
-
 
         ## Formatting if needed
         proceeds = round(proceeds, 2)
@@ -59,3 +72,6 @@ def index():
             + '</br></br>Net Profit:  ' + str(netProfit) \
             + '</br></br>Return on investment(%):  ' + str(returnOnInvestment) \
             + '</br></br>Break-even final share price:  ' + str(breakEvenPrice)
+            
+if __name__ == '__main__':
+    app.run(debug=True)
