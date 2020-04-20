@@ -91,17 +91,25 @@ def fetchStockInfo():
         </br>
     '''
 
+    internetStatus = ""
+
+    if internet_on() == False:
+        internetStatus = "<h2 style='color:red'>No internet connnection! Please try later.</br>" 
+        return internetStatus + stockInputTemplate
+    else:
+        internetStatus = "<h2 style='color:green'>Internet connection OK!</br>"
+
     if request.method == 'GET':
         # show html form
-        return stockInputTemplate
+        return internetStatus + stockInputTemplate
     elif request.method == 'POST':
         # calculate result
         stockSymbol = request.form.get('stockSymbol')
 
         if len(stockSymbol) < 1:
-            return "<h2 style='color:red'> Stock symbol is missing!" + stockInputTemplate
+            return "<h2 style='color:red'>Stock symbol is missing!" + internetStatus + stockInputTemplate
         elif len(stockSymbol) > 5:
-            return "<h2 style='color:red'>Stock symbol too long! Please check and try again!" + stockInputTemplate
+            return "<h2 style='color:red'>Stock symbol too long! Please check and try again!" + internetStatus +  stockInputTemplate
         
         ### Get the stock info
         url = "https://yahoo-finance15.p.rapidapi.com/api/yahoo/qu/quote/" + stockSymbol
@@ -111,15 +119,18 @@ def fetchStockInfo():
         }
         response = requests.request("GET", url, headers=headers)
 
+        if response.status_code != 200:
+            return "<h2 style='color:red'>Something is wrong with the data source. Please try again. </br>" + internetStatus + stockInputTemplate
+
         if len(response.text) == 0:
-            return "<h2 style='color:red'>Unable to find information. Please check your input and try again</br>" + stockInputTemplate
+            return "<h2 style='color:red'>Unable to find information. Please check your input and try again</br>" + internetStatus + stockInputTemplate
 
         jsonResponse = response.json()
         ### End of getting stock info
         if len(jsonResponse) == 0:
-            return "<h2 style='color:red'>Unable to find information. Please check your input and try again</br>" + stockInputTemplate
+            return "<h2 style='color:red'>Unable to find information. Please check your input and try again</br>" + internetStatus + stockInputTemplate
         if jsonResponse[0]["quoteType"] != "EQUITY":
-            return "<h2 style='color:red'>Your inquiry type is not equity, please enter an euqity symbol!" + stockInputTemplate
+            return "<h2 style='color:red'>Your inquiry type is not equity, please enter an euqity symbol!" + internetStatus +stockInputTemplate
         
         ## Information to display
         # 1) current date and time
@@ -184,6 +195,15 @@ def fetchStockInfo():
         valueChangePercentage=valueChangePercentage, \
         financialCurrency=financialCurrency) \
         + stockInputTemplate
+
+
+def internet_on():
+    try:
+        r = requests.request('GET', 'http://zhiyuanyao.info')
+        return True
+    except: 
+        return False
+        
 
 if __name__ == '__main__':
     app.run(debug=True)
